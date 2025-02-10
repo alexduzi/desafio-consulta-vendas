@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -33,24 +34,38 @@ public class SaleService {
 
     @Transactional(readOnly = true)
     public Page<SalesMinDTO> getSalesReport(String minDate, String maxDate, String sellerName, Pageable pageable) {
-        LocalDate initialDate = LocalDate.now().minusYears(1L);
-        LocalDate finalDate = LocalDate.ofInstant(Instant.now(), ZoneId.systemDefault());
-
-        if (minDate != null) {
-            initialDate = LocalDate.parse(minDate, getDateTimeFormatter());
-        }
-
-        if (maxDate != null) {
-            finalDate = LocalDate.parse(maxDate, getDateTimeFormatter());
-        }
+        LocalDate initialDate = getInitialDate(minDate);
+        LocalDate finalDate = getFinalDate(maxDate);
 
         return repository.getSalesReport(initialDate, finalDate, sellerName, pageable);
     }
 
     @Transactional(readOnly = true)
-    public SalesSummaryDTO getSalesSummary(String minDate, String maxDate) {
+    public List<SalesSummaryDTO> getSalesSummary(String minDate, String maxDate) {
+        LocalDate initialDate = getInitialDate(minDate);
+        LocalDate finalDate = getFinalDate(maxDate);
 
-        return new SalesSummaryDTO();
+        return repository.getSalesSummary(initialDate, finalDate);
+    }
+
+    private LocalDate getInitialDate(String minDate) {
+        LocalDate initialDate = LocalDate.now().minusYears(1L);
+
+        if (minDate != null) {
+            initialDate = LocalDate.parse(minDate, getDateTimeFormatter());
+        }
+
+        return initialDate;
+    }
+
+    private LocalDate getFinalDate(String maxDate) {
+        LocalDate finalDate = LocalDate.ofInstant(Instant.now(), ZoneId.systemDefault());
+
+        if (maxDate != null) {
+            finalDate = LocalDate.parse(maxDate, getDateTimeFormatter());
+        }
+
+        return finalDate;
     }
 
     private DateTimeFormatter getDateTimeFormatter() {
